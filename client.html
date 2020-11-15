@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8" >
+        <title>대화방</title>
+        <style>
+            body {
+                margin: 0;
+            }
+            .room {
+                background-color: #99D9EA;
+                width: 100%;
+                height: 85vh;
+                overflow: auto;
+            }
+            .chat-msg {
+                margin-bottom: 10px;
+                display: flex;
+                align-items: flex-end;
+            }
+            .chat-by-me {
+                justify-content: flex-end;
+            }
+            .chat-by-me .chat-body{
+                background-color: #ffe934;
+                margin-left: 5px;
+            }
+            .chat-to-me .chat-body{
+                background-color: #ffffff;
+                margin-left: 5px;
+            }
+            .chat-body {
+                padding: 10px 5px;
+                border-radius: 5px;
+                margin-right: 5px;
+                max-width: 60vw;
+            }
+            .chat-msg-center {
+                display: flex;
+                flex-direction: column;
+            }
+            .chat-by-me .chat-msg-center {
+                align-items: flex-end;
+                padding-right: 5px;
+            }
+            .chat-msg .chat-msg-username {
+                font-size: 12px;
+                font-weight: 600;
+                margin-bottom: 5px;
+                margin: 5px;
+            }
+            .system-msg {
+                display: flex;
+                justify-content: center;
+            }
+            .system-msg .chat-body{
+                background-color: #397ce8;
+                margin-left: 5px;
+                max-width: 80vw;
+                border-radius: 10px;
+                font-size: 12px;
+                padding: 5px 5px;
+                margin: 3px;
+            }
+            .msg-input {
+                display: flex;
+                flex-direction: row;
+                height: 5vh;
+            }
+            .textinput {
+                width: 100%;
+            }
+            .pretty {
+                height: 5vh;
+            }
+            .nick-change {
+                display: flex;
+                flex-direction: row;
+                justify-content: center;
+                height: 5vh;
+            }
+            .nickinput {
+                text-align: center;
+            }
+            .msg-time {
+                font-size: 10px;
+                color: rgba(0,0,0,0.5);
+            }
+        </style>
+        <script>
+            const addMine = (nick,timedata,msg) => {
+                var a = document.getElementsByClassName('room')[0];
+                a.innerHTML += '<div class="chat-msg chat-by-me"><span class="msg-time">'+timedata.slice(0,2)+':'+timedata.slice(2)+'</span><div class="chat-msg-center"><h3 class="chat-msg-username">'+nick+'</h3><span class="chat-body">'+msg.slice(5)+'</span></div><div>'
+                a.scrollTop = a.scrollHeight;
+            }
+            const addOther = (nick,timedata,msg) => {
+                var a = document.getElementsByClassName('room')[0];
+                a.innerHTML += '<div class="chat-msg chat-to-me"><div class="chat-msg-center"><h3 class="chat-msg-username">'+nick+'</h3><span class="chat-body">'+msg.slice(5)+'</span></div><span class="msg-time">'+timedata.slice(0,2)+':'+timedata.slice(2)+'</span></div>'
+                a.scrollTop = a.scrollHeight;
+            }
+            const addSystem = (msg) => {
+                var a = document.getElementsByClassName('room')[0];
+                a.innerHTML += '<div class="system-msg"><div class="chat-body">'+msg+'</div></div>'
+                a.scrollTop = a.scrollHeight;
+            }
+            const sendMessage = () => {
+                var b = document.getElementsByClassName('textinput')[0];
+                ww.send('mesg:' + b.value)
+                b.value = '';
+            }
+            const nickChange = () => {
+                var c = document.getElementsByClassName('nickinput')[0];
+                ww.send('nick:'+c.value);
+                c.value = '';
+            }
+            const msgProcess = (data) => {
+                var a = document.getElementsByClassName('room')[0];
+                var splited_data = data.split(':');
+                if(splited_data[0] === 'send'){
+                    addMine(splited_data[1], splited_data[2],splited_data.slice(3).join(':'));
+                }
+                else if(splited_data[0] === 'recv' ){
+                    addOther(splited_data[1], splited_data[2],splited_data.slice(3).join(':'));
+                }
+                else if(splited_data[0] === 'syst'){
+                    addSystem(splited_data.slice(2).join(':'));
+                }
+                else{
+                    addSystem('무언가 문제가 발생했습니다.')
+                }
+            }
+            var ww = new WebSocket('ws://192.168.0.61:9999');
+            ww.onmessage = (evt) => { msgProcess(evt.data); }
+        </script>
+    </head>
+    <body>
+        <div class="room">
+            <!--
+            <div class="chat-msg chat-by-me">
+                <span class="msg-time">12:33</span>
+                <div class="chat-msg-center">
+                    <h3 class="chat-msg-username">나나나</h3>
+                    <span class="chat-body">adsf</span>
+                </div>
+            </div>
+            <div class="chat-msg chat-to-me">
+                <div class="chat-msg-center">
+                    <h3 class="chat-msg-username">너너너</h3>
+                    <span class="chat-body">adsf</span>
+                </div>
+                <span class="msg-time">12:33</span>
+            </div>
+            <div class="system-msg">
+                <div class="chat-body">[닉변] 나나나 -> 너너너 아무튼 무언가 엄청나게 길게 많이 많이 많이 많이 많이 많이 많이 함</div>
+            </div>
+            -->
+        </div>
+        <div class="msg-input">
+            <input class="textinput" autofocus onkeypress="if(event.keyCode == 13){ sendMessage() }" placeholder="입력하세요" />
+        </div>
+        <div class="pretty">
+        </div>
+        <div class="nick-change">
+            <input class="nickinput" onkeypress="if(event.keyCode == 13){ nickChange() }" placeholder="닉네임" />
+            <button onclick="nickChange()">닉변</button>
+        </div>
+    </body>
+</html>
